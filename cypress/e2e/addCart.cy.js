@@ -10,15 +10,38 @@ function login(email, password) {
   cy.get('[data-test=login-submit]').click(); // Submit the login form
 }
 
+// Function to add items to the cart from the home page if the cart is empty
+function ensureCartHasItem() {
+  cy.visit('https://practicesoftwaretesting.com/'); // Navigate to the cart page
+
+  
+  
+
+  // Check if the cart is empty
+  cy.get('body').then(($body) => {
+    if ($body.find('[data-test=empty-cart-message]').length > 0) {
+      // If the cart is empty, go to the home page and add an item
+      cy.visit('https://practicesoftwaretesting.com/product/01JJ0KJQ1S40GHPMRKJKCXNRPF');
+      cy.get('[data-test=add-to-cart]', { timeout: 10000 }).first().should('be.visible').click();
+
+      // Verify that the item is added to the cart
+      cy.visit('https://practicesoftwaretesting.com/product/01JJ0KJQ1S40GHPMRKJKCXNRPF');
+      cy.get('[data-test=add-to-cart]').click();
+      cy.get('[data-test=cart-items]').should('have.length.greaterThan', 0);
+    } else {
+      // If the cart is not empty, ensure the cart view is loaded
+      cy.visit('https://practicesoftwaretesting.com/product/01JJ0KJQ1S40GHPMRKJKCXNRPF');
+      cy.get('[data-test=add-to-cart]').click();
+    
+    }
+  });
+}
+
 // Function to complete the checkout process
 function completeCheckout(quantity, paymentMethod) {
-  cy.visit('https://practicesoftwaretesting.com/product/01JHRNGV3T04J1BNTK0V5HJB9W'); // Navigate to a specific product page
+  ensureCartHasItem();
 
-  // Wait until the "Add to Cart" button is visible
-  cy.get('[data-test=add-to-cart]', { timeout: 10000 }).should('be.visible');
-  cy.get('[data-test=add-to-cart]').click(); // Add product to cart
-
-  cy.get('[data-test="nav-cart"] .svg-inline--fa').click(); // Open the cart
+  // Update the product quantity and proceed through the checkout steps
   cy.get('[data-test=product-quantity]')
     .clear() // Clear existing quantity
     .type(quantity); // Set new quantity
